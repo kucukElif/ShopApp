@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ShopApp.Bussiness/ShopApp.Bussiness.csproj" />
+  <Project Path="ShopApp.DataAccess/ShopApp.DataAccess.csproj" />
+  <Project Path="ShopApp.Entities/ShopApp.Entities.csproj" />
+  <Project Path="ShopApp.WebUI/ShopApp.WebUI.csproj" />
+</Solution>

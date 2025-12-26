@@ -1,0 +1,121 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using ShopApp.Bussiness.Abstract;
+using ShopApp.Entities;
+using ShopApp.WebUI.Models;
+
+namespace ShopApp.WebUI.Controllers
+{
+    public class Admin : Controller
+    {
+        private IProductService _productService;
+        private ICategoryService _categoryService;
+
+        public Admin(IProductService productService, ICategoryService categoryService)
+        {
+            _productService = productService;
+            _categoryService = categoryService;
+        }
+        [HttpGet]
+        public IActionResult ProductList()
+        {
+            return View(new ProductListModel()
+            {
+                Products = _productService.GetAll()
+            });
+        }
+
+        [HttpGet]
+        public IActionResult CreateProduct()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult CreateProduct(ProductModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var entity = new Product()
+            {
+                Name = model.Name,
+                Price = model.Price,
+                Description = model.Description,
+                ImageUrl = model.ImageUrl
+
+            };
+            _productService.Create(entity);
+            return RedirectToAction("Index");
+
+        }
+        public IActionResult EditProduct(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var entity = _productService.GetById((int)id);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+            var model = new ProductModel()
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Price = entity.Price,
+                Description = entity.Description,
+                ImageUrl = entity.ImageUrl
+            };
+            return View(model);
+
+        }
+        [HttpPost]
+        public IActionResult EditProduct(Product model)
+        {
+            var entity = _productService.GetById(model.Id);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+            entity.Name = model.Name;
+            entity.Description = model.Description;
+            entity.ImageUrl = model.ImageUrl;
+            entity.Price = model.Price;
+            _productService.Update(entity);
+            return RedirectToAction("Index");
+
+        }
+        [HttpPost]
+        public IActionResult DeleteProduct(int productId)
+        {
+            var entity = _productService.GetById(productId);
+            if (entity != null)
+            {
+                _productService.Delete(entity);
+            }
+            return RedirectToAction("Index");
+        }
+
+
+        public IActionResult CategoryList()
+        {
+            return View(new CategoryListModel()
+            {
+                Categories = _categoryService.GetAll()
+            });
+        }
+
+        public IActionResult EditCategory()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult EdiCategory()
+        {
+            return View();
+        }
+    }
+}

@@ -1,0 +1,9 @@
+﻿.pt-100 {
+    padding-top: 100px;
+}
+.carousel-item img{
+     height:400px;
+     object-fit: cover;
+}
+
+
