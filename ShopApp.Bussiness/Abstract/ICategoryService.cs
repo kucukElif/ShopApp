@@ -12,5 +12,7 @@ namespace ShopApp.Bussiness.Abstract
         void Add(Category category);
         void Update(Category category);
         void Delete(Category category);
+        Category GetByIdWithProducts(int id);
+        void DeleteFromCategory(int categoryId, int productId);
     }
 }

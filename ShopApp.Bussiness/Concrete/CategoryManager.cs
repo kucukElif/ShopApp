@@ -20,12 +20,17 @@ namespace ShopApp.Bussiness.Concrete
 
         public void Add(Category category)
         {
-            throw new NotImplementedException();
+            _categoryDal.Create(category);
         }
 
         public void Delete(Category category)
         {
-            throw new NotImplementedException();
+           _categoryDal.Delete(category);
+        }
+
+        public void DeleteFromCategory(int categoryId, int productId)
+        {
+            _categoryDal.DeleteFromCategory(categoryId, productId);
         }
 
         public List<Category> GetAll()
@@ -35,12 +40,17 @@ namespace ShopApp.Bussiness.Concrete
 
         public Category GetById(int id)
         {
-            throw new NotImplementedException();
+            return _categoryDal.GetById(id);
+        }
+
+        public Category GetByIdWithProducts(int id)
+        {
+            return _categoryDal.GetByIdWithProduct(id);
         }
 
         public void Update(Category category)
         {
-            throw new NotImplementedException();
+            _categoryDal.Update(category);
         }
     }
 }

@@ -53,7 +53,44 @@ namespace ShopApp.DataAccess.Concrete.EfCore
                    .ThenInclude(i => i.Category)
                    .Where(i => i.ProductCategories.Any(a => a.Category.CategoryName.ToLower() == category.ToLower()));
                 }
-                return products.Skip((page-1)*pageSize).Take(pageSize).ToList();
+                return products.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            }
+        }
+
+        public Product GetProductsByCategory(int id)
+        {
+            using (var context = new ShopContext())
+            {
+                return context.Products
+                    .Where(i => i.Id == id)
+                    .Include(i => i.ProductCategories)
+                    .ThenInclude(i => i.Category)
+                    .FirstOrDefault();
+            }
+        }
+
+        public void Update(Product entity, int[] categoryIds)
+        {
+            using (var context = new ShopContext())
+            {
+                var product = context.Products
+                    .Include(i=>i.ProductCategories)
+                    .FirstOrDefault(i=>i.Id==entity.Id);
+                if (product != null)
+                {
+                    product.Name = entity.Name;
+                    product.Description = entity.Description;
+                    product.ImageUrl = entity.ImageUrl;
+                    product.Price=entity.Price;
+                    product.ProductCategories = categoryIds.Select(catid => new ProductCategory()
+                    {
+                        CategoryId = catid,
+                        ProductId = entity.Id
+                    }).ToList();
+                    context.SaveChanges();
+                       
+                }
+
             }
         }
     }
