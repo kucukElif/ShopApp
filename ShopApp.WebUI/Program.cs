@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using ShopApp.Bussiness.Abstract;
 using ShopApp.Bussiness.Concrete;
 using ShopApp.DataAccess.Abstract;
 using ShopApp.DataAccess.Concrete.EfCore;
+using ShopApp.WebUI.Identity;
 using ShopApp.WebUI.Middlewares;
 
 namespace ShopApp.WebUI
@@ -11,8 +14,9 @@ namespace ShopApp.WebUI
     {
         public static void Main(string[] args)
         {
+            
             var builder = WebApplication.CreateBuilder(args);
-
+           
             builder.Services.AddScoped<IProductDal, EfCoreProductDal>();
             builder.Services.AddScoped<ICategoryDal, EfCoreCategoryDal>();
             builder.Services.AddScoped<IProductService, ProductManager>();
@@ -26,6 +30,44 @@ namespace ShopApp.WebUI
      options.UseSqlServer(
          builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
+   options.UseSqlServer(
+       builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationIdentityDbContext>()
+                .AddDefaultTokenProviders();
+            builder.Services.Configure<IdentityOptions>(options =>
+            {
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase= true;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric= true;
+                options.Password.RequireUppercase= true;
+
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan= TimeSpan.FromMinutes(5);
+                options.Lockout.AllowedForNewUsers = true;
+
+                //options.User.AllowedUserNameCharacters = "";
+                options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedEmail = false;
+                options.SignIn.RequireConfirmedPhoneNumber = false;
+            });
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/account/login";
+                options.LogoutPath = "/account/logout";
+                options.AccessDeniedPath = "/account/accessdenied";
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+                options.SlidingExpiration = true;
+                options.Cookie = new CookieBuilder
+                {
+                    HttpOnly = true,
+                    Name = "ShopApp.Security.Cookie",
+                    
+                };
+            });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -38,7 +80,7 @@ namespace ShopApp.WebUI
 
             app.UseStaticFiles();
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(
@@ -50,9 +92,10 @@ namespace ShopApp.WebUI
                 app.UseDeveloperExceptionPage();
                 SeedDatabase.Seed();
             }
-            app.UseStaticFiles();
+            
             app.CustomStaticFiles();
-            app.UseRouting();
+     
+           
             app.UseEndpoints(routes =>
             {
                 routes.MapControllerRoute(
@@ -83,6 +126,7 @@ namespace ShopApp.WebUI
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
 
+           
 
             app.Run();
         }
