@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using ShopApp.Bussiness.Abstract;
 using ShopApp.Bussiness.Concrete;
 using ShopApp.DataAccess.Abstract;
 using ShopApp.DataAccess.Concrete.EfCore;
+using ShopApp.WebUI.EmailServices;
 using ShopApp.WebUI.Identity;
 using ShopApp.WebUI.Middlewares;
 
@@ -21,6 +23,7 @@ namespace ShopApp.WebUI
             builder.Services.AddScoped<ICategoryDal, EfCoreCategoryDal>();
             builder.Services.AddScoped<IProductService, ProductManager>();
             builder.Services.AddScoped<ICategoryService, CategoryManager>();
+            builder.Services.AddTransient<IEmailSender, EmailSender>();
             builder.Services.AddMvc();
             builder.Services.AddControllersWithViews();
             // Add services to the container.
@@ -51,7 +54,7 @@ namespace ShopApp.WebUI
 
                 //options.User.AllowedUserNameCharacters = "";
                 options.User.RequireUniqueEmail = true;
-                options.SignIn.RequireConfirmedEmail = false;
+                options.SignIn.RequireConfirmedEmail = true;
                 options.SignIn.RequireConfirmedPhoneNumber = false;
             });
             builder.Services.ConfigureApplicationCookie(options =>
