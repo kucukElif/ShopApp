@@ -65,7 +65,7 @@ namespace ShopApp.WebUI
                 {
                     HttpOnly = true,
                     Name = "ShopApp.Security.Cookie",
-                    
+                    SameSite =SameSiteMode.Strict
                 };
             });
             var app = builder.Build();
