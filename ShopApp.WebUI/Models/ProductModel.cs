@@ -11,13 +11,13 @@ namespace ShopApp.WebUI.Models
         //[Required]
         //[StringLength(50, MinimumLength =10,ErrorMessage ="Ürün ismi minimum 10 ve maksimum 60 karakter olmalıdır.")]
         public string Name { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Ürün resmi zorunludur")]
         public string ImageUrl { get; set; }
         [Required(ErrorMessage ="Fiyat belirtiniz.")]
         [Range(1,1000000)]
         public decimal? Price { get; set; }
         [Required]
-        [StringLength(100, MinimumLength = 20, ErrorMessage = "Ürün ismi minimum 50 ve maksimum 100 karakter olmalıdır.")]
+        [StringLength(10000, MinimumLength = 20, ErrorMessage = "Ürün ismi minimum 50 ve maksimum 100 karakter olmalıdır.")]
         public string Description { get; set; }
 
         [ValidateNever]

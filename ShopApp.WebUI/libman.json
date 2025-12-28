@@ -5,6 +5,10 @@
     {
       "library": "jquery-validation-unobtrusive@4.0.0",
       "destination": "wwwroot/lib/jquery-validation-unobtrusive"
+    },
+    {
+      "library": "ckeditor@4.25.1",
+      "destination": "wwwroot/ckeditor/"
     }
   ]
 }
