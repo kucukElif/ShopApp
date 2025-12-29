@@ -180,43 +180,36 @@ namespace ShopApp.WebUI.Controllers
                     Css = "danger"
                 });
 
-
-
                 return View();
             }
 
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
+            if (user != null)
             {
-                TempData.Put("message", new ResultMessage()
-                {
-                    Title = "Forgot P;assword",
-                    Message = "Epsota adresi ile bir kullanıcı bulunamadı.",
-                    Css = "danger"
-                });
+                var code = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-                return View();
+                var callbackUrl = Url.Action(
+                    "ResetPassword",
+                    "Account",
+                    new { token = code, email = email },
+                    Request.Scheme
+                );
+
+                await _emailSender.SendEmailAsync(
+                    email,
+                    "Reset password",
+                    $"Parolanızı yenilemek için <a href='{callbackUrl}'>tıklayınız</a>."
+                );
             }
-
-            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            var callbackUrl = Url.Action("ResetPassword", "Account", new
-            {
-               
-                token = code
-            });
-            //send email
-            await _emailSender.SendEmailAsync(email, "Reset password.", $"Parolanızı yenilemek için linke <a href='https://localhost:44385{callbackUrl}'>tıklayınız.</a> ");
 
             TempData.Put("message", new ResultMessage()
             {
-                Title = "Forgot P;assword",
-                Message = "Parola yenilemek için hesabınıza mail gönderildi.",
-                Css = "warning"
+                Title = "Forgot Password",
+                Message = "Eğer email sistemimizde kayıtlıysa, parola yenileme linki gönderilmiştir.",
+                Css = "success"
             });
 
-
-            return RedirectToAction("ResetPassword", "Account");
+            return View();
         }
 
 
