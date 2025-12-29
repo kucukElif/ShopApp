@@ -18,7 +18,8 @@ namespace ShopApp.WebUI
         {
             
             var builder = WebApplication.CreateBuilder(args);
-           
+            builder.Services.AddScoped<ICartDal, EfCoreCartDal>();
+            builder.Services.AddScoped<ICartService, CartManager>();
             builder.Services.AddScoped<IProductDal, EfCoreProductDal>();
             builder.Services.AddScoped<ICategoryDal, EfCoreCategoryDal>();
             builder.Services.AddScoped<IProductService, ProductManager>();
@@ -101,6 +102,14 @@ namespace ShopApp.WebUI
            
             app.UseEndpoints(routes =>
             {
+
+                routes.MapControllerRoute(
+             name: "cart",
+             pattern: "cart",
+             defaults: new { controller = "Cart", action = "Index" }
+           );
+
+
                 routes.MapControllerRoute(
               name: "adminCategories",
               pattern: "admin/categories/{id?}",
