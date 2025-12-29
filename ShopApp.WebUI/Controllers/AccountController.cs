@@ -128,7 +128,7 @@ namespace ShopApp.WebUI.Controllers
 
         }
 
-        public IActionResult ForgotPassword(string email)
+        public IActionResult ForgotPassword()
         {
             return View();
         }
@@ -141,14 +141,54 @@ namespace ShopApp.WebUI.Controllers
                 return View();
             }
             var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
+            if (user == null)
             {
                 return View();
             }
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            return View();
+            var callbackUrl = Url.Action("ResetPassword", "Account", new
+            {
+               
+                token = code
+            });
+            //send email
+            await _emailSender.SendEmailAsync(email, "Reset password.", $"Parolanızı yenilemek için linke <a href='https://localhost:44385{callbackUrl}'>tıklayınız.</a> ");
+            return RedirectToAction("ResetPassword", "Account");
+        }
+
+
+        public IActionResult ResetPassword(string token)
+        {
+            if (token == null)
+            {
+                return RedirectToAction("Home", "Index");
+            }
+            var model = new ResetPasswordModel { Token = token };
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return RedirectToAction("Home", "Index");
+            }
+
+            var results = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            if (results.Succeeded)
+            {
+                return RedirectToAction("Login", "Account");
+
+            }
+            return View(model);
         }
     }
 }
