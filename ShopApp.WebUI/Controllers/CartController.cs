@@ -28,6 +28,7 @@ namespace ShopApp.WebUI.Controllers
                 CartId = cart.Id,
                 CartItems = cart.CartItems.Select(i => new CartItemModel()
                 {
+                    ProductId= i.ProductId,
                     CartItemId = i.Id,
                     Name = i.Product.Name,
                     Price = (decimal)i.Product.Price,
@@ -39,9 +40,18 @@ namespace ShopApp.WebUI.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddToCart()
+        public IActionResult AddToCart(int productId, int quantity)
         {
-            return View();
+            _cartService.AddToCart(_userManager.GetUserId(User), productId, quantity);
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult DeleteFromCart(int productId)
+        {
+            _cartService.DeleteFromCart(_userManager.GetUserId(User), productId);
+            return RedirectToAction("Index");
+
         }
     }
 }
