@@ -129,9 +129,17 @@ namespace ShopApp.WebUI
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
 
-           
+            using (var scope= app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var userManager = services.GetRequiredService <UserManager<ApplicationUser>>();
+                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                var configuration = services.GetRequiredService<IConfiguration>();
+                SeedIdentity.Seed(userManager, roleManager, configuration).Wait();
+            }
 
-            app.Run();
+                app.Run();
+
         }
     }
 }

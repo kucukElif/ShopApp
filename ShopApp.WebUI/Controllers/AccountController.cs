@@ -251,5 +251,10 @@ namespace ShopApp.WebUI.Controllers
             }
             return View(model);
         }
+
+        public IActionResult Accessdenied()
+        {
+            return View();
+        }
     }
 }
