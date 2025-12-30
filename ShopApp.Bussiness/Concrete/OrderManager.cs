@@ -21,5 +21,10 @@ namespace ShopApp.Bussiness.Concrete
         {
             _orderDal.Create(entity);
         }
+
+        public List<Order> GetAll(string userId)
+        {
+            return _orderDal.GetOrders(userId);
+        }
     }
 }

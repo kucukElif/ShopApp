@@ -107,7 +107,7 @@ namespace ShopApp.WebUI.Controllers
                     }).ToList()
                 };
                 //odeme
-                var payment = PaymenProcess(model);
+                var payment = PaymentProcess(model);
                 if (payment.Status == "success")
                 {
                     SaveOrder(model, payment, userId);
@@ -167,7 +167,7 @@ namespace ShopApp.WebUI.Controllers
             throw new NotImplementedException();
         }
 
-        private Payment PaymenProcess(OrderModel model)
+        private Payment PaymentProcess(OrderModel model)
         {
             IyzipayCore.Options options = new IyzipayCore.Options();
             options.ApiKey = "sandbox-4ZKlqFeGLxrj3fbtPTierF0Ux5MLLIHj";
@@ -257,6 +257,41 @@ namespace ShopApp.WebUI.Controllers
 
             return Payment.Create(request, options);
 
+        }
+
+
+        public IActionResult GetOrders()
+        {
+            var orders = _orderService.GetAll(_userManager.GetUserId(User));
+            var orderlistModel = new List<OrderListModel>();
+            OrderListModel orderModel;
+            foreach (var order in orders)
+            {
+                orderModel = new OrderListModel();
+                orderModel.OrderId = order.Id;
+                orderModel.OrderNumber = order.OrderNumber;
+                orderModel.OrderDate = order.OrderDate;
+                orderModel.OrderNote = order.OrderNote;
+                orderModel.Phone = order.Phone;
+                orderModel.FirstName = order.FirstName;
+                orderModel.LastName = order.LastName;
+                orderModel.Email= order.Email;
+                orderModel.Address= order.Address;
+                orderModel.City=order.City;
+
+                orderModel.OrderItems = order.OrderItems.Select(i => new OrderItemModel()
+                {
+                    OrderItemId = i.Id,
+                    Name = i.Product.Name,
+                    Price = i.Price,
+                    Quantity = i.Quantity,
+                    ImageUrl = i.Product.ImageUrl
+                }).ToList();
+                
+
+                orderlistModel.Add(orderModel);
+            }
+            return View(orderlistModel);
         }
     }
 

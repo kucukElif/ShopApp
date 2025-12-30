@@ -10,5 +10,6 @@ namespace ShopApp.Bussiness.Abstract
     public interface IOrderService
     {
         void Create(Order entity);
+        List<Order> GetAll(string userId);
     }
 }

@@ -120,6 +120,11 @@ namespace ShopApp.WebUI
             pattern: "checkout",
             defaults: new { controller = "Cart", action = "Checkout" }
           );
+                routes.MapControllerRoute(
+         name: "orders",
+         pattern: "orders",
+         defaults: new { controller = "Cart", action = "GetOrders" }
+       );
 
 
                 routes.MapControllerRoute(
