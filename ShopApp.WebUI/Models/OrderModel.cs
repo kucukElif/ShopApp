@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 
 namespace ShopApp.WebUI.Models
 {
@@ -16,7 +17,8 @@ namespace ShopApp.WebUI.Models
         public string ExpirationMonth { get; set; }
         public string ExpirationYear { get; set; }
         public string CVV { get; set; }
-        
+
+        [ValidateNever]
         public CartModel CartModel { get; set; }
     }
 }

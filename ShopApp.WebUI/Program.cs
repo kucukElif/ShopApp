@@ -18,12 +18,18 @@ namespace ShopApp.WebUI
         {
             
             var builder = WebApplication.CreateBuilder(args);
+            builder.Services.AddScoped<IOrderDal, EfCoreOrderDal>();
+            builder.Services.AddScoped<IOrderService, OrderManager>();
+
             builder.Services.AddScoped<ICartDal, EfCoreCartDal>();
             builder.Services.AddScoped<ICartService, CartManager>();
+
             builder.Services.AddScoped<IProductDal, EfCoreProductDal>();
             builder.Services.AddScoped<ICategoryDal, EfCoreCategoryDal>();
+
             builder.Services.AddScoped<IProductService, ProductManager>();
             builder.Services.AddScoped<ICategoryService, CategoryManager>();
+
             builder.Services.AddTransient<IEmailSender, EmailSender>();
             builder.Services.AddMvc();
             builder.Services.AddControllersWithViews();

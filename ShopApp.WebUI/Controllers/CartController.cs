@@ -1,9 +1,17 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using IyzipayCore;
+using IyzipayCore.Model;
+using IyzipayCore.Request;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using ShopApp.Bussiness.Abstract;
+using ShopApp.Entities;
 using ShopApp.WebUI.Identity;
 using ShopApp.WebUI.Models;
+using System;
+using System.Globalization;
+using System.Net;
 
 namespace ShopApp.WebUI.Controllers
 {
@@ -12,10 +20,12 @@ namespace ShopApp.WebUI.Controllers
     {
         private ICartService _cartService;
         private UserManager<ApplicationUser> _userManager;
+        private IOrderService _orderService;
 
 
-        public CartController(ICartService cartService, UserManager<ApplicationUser> userManager)
+        public CartController(IOrderService orderService,ICartService cartService, UserManager<ApplicationUser> userManager)
         {
+            _orderService = orderService;
             _cartService = cartService;
             _userManager = userManager;
         }
@@ -28,12 +38,12 @@ namespace ShopApp.WebUI.Controllers
                 CartId = cart.Id,
                 CartItems = cart.CartItems.Select(i => new CartItemModel()
                 {
-                    ProductId= i.ProductId,
+                    ProductId = i.ProductId,
                     CartItemId = i.Id,
                     Name = i.Product.Name,
                     Price = (decimal)i.Product.Price,
                     ImageUrl = i.Product.ImageUrl,
-                    Quantity=i.Quantity
+                    Quantity = i.Quantity
 
                 }).ToList()
             });
@@ -68,12 +78,187 @@ namespace ShopApp.WebUI.Controllers
                     Name = i.Product.Name,
                     Price = (decimal)i.Product.Price,
                     ImageUrl = i.Product.ImageUrl,
-                    Quantity = i.Quantity
+                    Quantity = i.Quantity,
+                    
 
                 }).ToList()
             };
 
             return View(orderModel);
         }
+
+        [HttpPost]
+        public IActionResult Checkout(OrderModel model)
+        {
+           
+                var userId = _userManager.GetUserId(User);
+                var cart = _cartService.GetCartByUserId(userId);
+                model.CartModel = new CartModel()
+                {
+                    CartId = cart.Id,
+                    CartItems = cart.CartItems.Select(i => new CartItemModel()
+                    {
+                        CartItemId = i.Id,
+                        ProductId = i.ProductId,
+                        Name = i.Product.Name,
+                        Price = (decimal)i.Product.Price,
+                        ImageUrl = i.Product.ImageUrl,
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+                //odeme
+                var payment = PaymenProcess(model);
+                if (payment.Status == "success")
+                {
+                    SaveOrder(model, payment, userId);
+                   // ClearCart(userId);
+                    return View("Success");
+                }
+            //siparis
+
+                return View(model);
+            
+            
+        }
+
+        private void SaveOrder(OrderModel model, Payment payment, string userId)
+        {
+            var order = new Order
+            {
+                OrderNumber = new Random().Next(111111, 999999).ToString(),
+                OrderState = EnumOrderState.Completed,
+                PaymentTypes = EnumPaymentTypes.CreditCard,
+
+                PaymentId = payment.PaymentId,
+                ConversationId = payment.ConversationId,
+                PaymentToken="",
+
+                OrderDate = DateTime.Now,
+
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Phone = model.Phone,
+                Address = model.Address,
+                City = model.City,
+                Email = model.Email,
+                OrderNote ="",
+                UserId = userId,
+
+                OrderItems = new List<OrderItem>()
+            };
+            foreach (var item in model.CartModel.CartItems)
+            {
+                var orderitem = new OrderItem()
+                {
+                    Price = item.Price,
+                    Quantity = item.Quantity,
+                    ProductId = item.ProductId
+                };
+
+                order.OrderItems.Add(orderitem);
+
+            }
+            _orderService.Create(order);
+
+        }
+
+        private void ClearCart(object userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        private Payment PaymenProcess(OrderModel model)
+        {
+            IyzipayCore.Options options = new IyzipayCore.Options();
+            options.ApiKey = "sandbox-4ZKlqFeGLxrj3fbtPTierF0Ux5MLLIHj";
+            options.SecretKey = "sandbox-B6iSSJ4TGxPfRjNVyvoK6H1I2CKek9ao";
+            options.BaseUrl = "https://sandbox-api.iyzipay.com";
+
+            CreatePaymentRequest request = new CreatePaymentRequest();
+            request.Locale = Locale.TR.ToString();
+            request.ConversationId = Guid.NewGuid().ToString();
+            request.Price = model.CartModel.TotalPrice().ToString("F2", CultureInfo.InvariantCulture);
+            request.PaidPrice = model.CartModel.TotalPrice().ToString();
+            request.Currency = Currency.TRY.ToString();
+            request.Installment = 1;
+            request.BasketId = model.CartModel.CartId.ToString();
+            request.PaymentChannel = PaymentChannel.WEB.ToString();
+            request.PaymentGroup = PaymentGroup.PRODUCT.ToString();
+
+            PaymentCard paymentCard = new PaymentCard();
+            paymentCard.CardHolderName = model.CardName;
+            paymentCard.CardNumber = model.CardNumber;
+            paymentCard.ExpireMonth = model.ExpirationMonth;
+            paymentCard.ExpireYear = model.ExpirationYear;
+            paymentCard.Cvc = model.CVV;
+            paymentCard.RegisterCard = 0;
+            request.PaymentCard = paymentCard;
+
+           
+            //paymentCard.CardHolderName = "John Doe";
+            //paymentCard.CardNumber = "5528790000000008";
+            //paymentCard.ExpireMonth = "12";
+            //paymentCard.ExpireYear = "2030";
+            //paymentCard.Cvc = "123";
+            //paymentCard.RegisterCard = 0;
+            //request.PaymentCard = paymentCard;
+
+            Buyer buyer = new Buyer();
+            buyer.Id = "BY789";
+            buyer.Name = "John";
+            buyer.Surname = "Doe";
+            buyer.GsmNumber = "+905350000000";
+            buyer.Email = "email@email.com";
+            buyer.IdentityNumber = "74300864791";
+            buyer.LastLoginDate = "2015-10-05 12:43:35";
+            buyer.RegistrationDate = "2013-04-21 15:12:09";
+            buyer.RegistrationAddress = "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1";
+            buyer.Ip = "85.34.78.112";
+            buyer.City = model.City;
+            buyer.Country = "Turkey";
+            buyer.ZipCode = "34732";
+            request.Buyer = buyer;
+
+            Address shippingAddress = new Address();
+            shippingAddress.ContactName = "Jane Doe";
+            shippingAddress.City = "Istanbul";
+            shippingAddress.Country = "Turkey";
+            shippingAddress.Description = "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1";
+            shippingAddress.ZipCode = "34742";
+            request.ShippingAddress = shippingAddress;
+
+            Address billingAddress = new Address();
+            billingAddress.ContactName = "Jane Doe";
+            billingAddress.City = "Istanbul";
+            billingAddress.Country = "Turkey";
+            billingAddress.Description = "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1";
+            billingAddress.ZipCode = "34742";
+            request.BillingAddress = billingAddress;
+
+            List<BasketItem> basketItems = new List<BasketItem>();
+            BasketItem basketItem;
+            foreach (var item in model.CartModel.CartItems)
+            {
+                basketItem = new BasketItem();
+
+                basketItem.Id = item.ProductId.ToString();
+                basketItem.Name = item.Name;
+                basketItem.Category1 = "Electronics";
+             
+                basketItem.ItemType = BasketItemType.PHYSICAL.ToString();
+                basketItem.Price = (item.Price*item.Quantity).ToString("F2", CultureInfo.InvariantCulture); ;
+
+                basketItems.Add(basketItem);
+            }
+           
+            
+            request.BasketItems = basketItems;
+
+
+            return Payment.Create(request, options);
+
+        }
     }
+
+
 }

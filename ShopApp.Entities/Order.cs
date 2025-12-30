@@ -7,9 +7,10 @@ namespace ShopApp.Entities
 {
     public class Order
     {
-
-        //stripe
-        //IYZICO
+        public Order()
+        {
+            OrderItems = new List<OrderItem>();
+        }
         public int Id { get; set; }
 
         public string OrderNumber { get; set; }
@@ -37,7 +38,7 @@ namespace ShopApp.Entities
     {
         Waiting=0,
         Unpaid=1,
-        Complete=2
+        Completed=2
     }
     public enum EnumPaymentTypes
     {
