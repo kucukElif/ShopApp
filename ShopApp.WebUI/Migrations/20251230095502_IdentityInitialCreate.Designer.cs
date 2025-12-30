@@ -12,8 +12,8 @@ using ShopApp.WebUI.Identity;
 namespace ShopApp.WebUI.Migrations
 {
     [DbContext(typeof(ApplicationIdentityDbContext))]
-    [Migration("20251228143425_AddIdentity")]
-    partial class AddIdentity
+    [Migration("20251230095502_IdentityInitialCreate")]
+    partial class IdentityInitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
